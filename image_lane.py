@@ -1,16 +1,37 @@
-# This is a sample Python script.
+import cv2
+import numpy as np
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# Read the image
+img = cv2.imread('lane.jpg')
 
+# Convert the image to grayscale
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# Apply Gaussian Blur to remove noise
+blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
+# Apply Canny edge detection to find edges
+edges = cv2.Canny(blur, 50, 150)
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+# Define the Region of Interest
+mask = np.zeros_like(edges)
+height, width = img.shape[:2]
+roi = [(0, height), (width/2, height/2), (width, height)]
+polygon = np.array([roi], np.int32)
+cv2.fillPoly(mask, polygon, 255)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# Apply bitwise AND to mask the edges
+masked_edges = cv2.bitwise_and(edges, mask)
+
+# Detect lines using Hough Transform
+lines = cv2.HoughLinesP(masked_edges, rho=2, theta=np.pi/180, threshold=100, minLineLength=50, maxLineGap=20)
+
+# Draw lines on the original image
+for line in lines:
+    x1, y1, x2, y2 = line[0]
+    cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+# Show the output
+cv2.imshow('Lane Detection', img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

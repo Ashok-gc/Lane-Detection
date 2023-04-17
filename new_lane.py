@@ -1,9 +1,9 @@
 # import cv2
 # import numpy as np
-
+#
 # # Load the video
 # cap = cv2.VideoCapture('lanes_clip.mp4')
-
+#
 # # Define the region of interest
 # roi_vertices = [(0, 720), (1280, 720), (750, 460), (550, 460)]
 # def region_of_interest(img, vertices):
@@ -12,7 +12,7 @@
 #     cv2.fillPoly(mask, [vertices], match_mask_color)
 #     masked_image = cv2.bitwise_and(img, mask)
 #     return masked_image
-
+#
 # # Define the line drawing function
 # def draw_lines(img, lines):
 #     left_fit = []
@@ -26,16 +26,16 @@
 #             left_fit.append((slope, y_intercept))
 #         else:
 #             right_fit.append((slope, y_intercept))
-
+#
 #     left_fit_avg = np.average(left_fit, axis=0)
 #     right_fit_avg = np.average(right_fit, axis=0)
-
+#
 #     left_line = calculate_line_coordinates(img, left_fit_avg)
 #     right_line = calculate_line_coordinates(img, right_fit_avg)
-
+#
 #     cv2.line(img, (int(left_line[0]), int(left_line[1])), (int(left_line[2]), int(left_line[3])), (0, 255, 0), 10)
 #     cv2.line(img, (int(right_line[0]), int(right_line[1])), (int(right_line[2]), int(right_line[3])), (0, 255, 0), 10)
-
+#
 # def calculate_line_coordinates(img, parameters):
 #     if parameters is None or isinstance(parameters, np.float64):
 #         return None
@@ -48,41 +48,41 @@
 #         x1 = int((y1 - y_intercept) / slope)
 #         x2 = int((y2 - y_intercept) / slope)
 #         return np.array([x1, y1, x2, y2])
-
+#
 # # Process each frame
 # while True:
 #     # Capture the frame
 #     ret, frame = cap.read()
-
+#
 #     # Apply a Gaussian blur to the image
 #     blur = cv2.GaussianBlur(frame, (5, 5), 0)
-
+#
 #     # Convert the image to grayscale
 #     gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
-
+#
 #     # Perform edge detection using Canny
 #     edges = cv2.Canny(gray, 50, 150)
-
+#
 #     # Apply the region of interest mask
 #     roi = region_of_interest(edges, np.array([roi_vertices], np.int32))
-
+#
 #     # Perform line detection using HoughLinesP
 #     lines = cv2.HoughLinesP(roi, 1, np.pi/180, threshold=20, minLineLength=20, maxLineGap=300)
-
+#
 #     # Draw the detected lines onto the original image
 #     draw_lines(frame, lines)
-
+#
 #     # Show the resulting image
 #     cv2.imshow('frame', frame)
-
+#
 #     # Exit the loop if the 'q' key is pressed
 #     if cv2.waitKey(1) == ord('q'):
 #         break
-
+#
 # # Release the video capture object and close all windows
 # cap.release()
 # cv2.destroyAllWindows()
-
+#
 
 import cv2
 import numpy as np
