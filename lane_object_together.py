@@ -91,12 +91,52 @@ while True:
             cv2.putText(frame, classNames[classId-1].upper(), (box[0]+10, box[1]+30),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
 
-    # Lane detection
+#     # Lane detection
+#     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#     edges = cv2.Canny(gray, 100, 200)
+#     roi = region_of_interest(edges, np.array([roi_vertices], np.int32))
+#     lines = cv2.HoughLinesP(roi, rho=2, theta=np.pi/180, threshold=100, minLineLength=40, maxLineGap=5)
+#     draw_lines(frame, lines)
+
+#     # Display the frame
+#     cv2.imshow('Frame', frame)
+#     if cv2.waitKey(1) == ord('q'):
+#         break
+
+# # Release the video
+# cap.release()
+# cv2.destroyAllWindows()
+
+# Lane detection
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray, 100, 200)
     roi = region_of_interest(edges, np.array([roi_vertices], np.int32))
     lines = cv2.HoughLinesP(roi, rho=2, theta=np.pi/180, threshold=100, minLineLength=40, maxLineGap=5)
-    draw_lines(frame, lines)
+    
+    # Check if any lines are detected
+    if lines is not None:
+        left_line, right_line = None, None
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            slope, intercept = np.polyfit((x1, x2), (y1, y2), 1)
+            line_length = np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+            if slope < 0:  # Left lane
+                if left_line is None or line_length > left_line[1]:
+                    left_line = ((x1, y1, x2, y2), line_length)
+            else:  # Right lane
+                if right_line is None or line_length > right_line[1]:
+                    right_line = ((x1, y1, x2, y2), line_length)
+        # Calculate and draw the lines
+        left_line_coords = calculate_line_coordinates(frame, np.polyfit((left_line[0][0], left_line[0][2]),
+                                                                       (left_line[0][1], left_line[0][3]), 1))
+        right_line_coords = calculate_line_coordinates(frame, np.polyfit((right_line[0][0], right_line[0][2]),
+                                                                         (right_line[0][1], right_line[0][3]), 1))
+        if left_line_coords is not None:
+            cv2.line(frame, (left_line_coords[0], left_line_coords[1]),
+                     (left_line_coords[2], left_line_coords[3]), (0, 255, 0), 5)
+        if right_line_coords is not None:
+            cv2.line(frame, (right_line_coords[0], right_line_coords[1]),
+                     (right_line_coords[2], right_line_coords[3]), (0, 255, 0), 5)
 
     # Display the frame
     cv2.imshow('Frame', frame)
