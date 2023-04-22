@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Load the camera
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture("0")
 
 # Define the region of interest
 roi_vertices = [(0, 720), (1280, 720), (750, 460), (550, 460)]
