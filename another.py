@@ -15,36 +15,82 @@ min_line_length = 50 # minimum number of pixels making up a line
 max_line_gap = 100 # maximum gap in pixels between connectable line segments
 
 # Define a function to perform lane detection on a single frame
-def detect_lanes(frame):
-    # Convert to grayscale
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+#red color lane
+# def detect_lanes(frame):
+#     # Convert to grayscale
+#     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     
-    # Apply Gaussian blur to smooth the image
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+#     # Apply Gaussian blur to smooth the image
+#     blur = cv2.GaussianBlur(gray, (5, 5), 0)
     
-    # Perform Canny edge detection
-    edges = cv2.Canny(blur, 50, 150)
+#     # Perform Canny edge detection
+#     edges = cv2.Canny(blur, 50, 150)
     
-    # Mask the edges image to only show the region of interest
-    mask = np.zeros_like(edges)
-    cv2.fillPoly(mask, [vertices], 255)
-    masked_edges = cv2.bitwise_and(edges, mask)
+#     # Mask the edges image to only show the region of interest
+#     mask = np.zeros_like(edges)
+#     cv2.fillPoly(mask, [vertices], 255)
+#     masked_edges = cv2.bitwise_and(edges, mask)
     
-    # Perform Hough transform to detect lines
-    lines = cv2.HoughLinesP(masked_edges, rho, theta, threshold, np.array([]),
-                            min_line_length, max_line_gap)
+#     # Perform Hough transform to detect lines
+#     lines = cv2.HoughLinesP(masked_edges, rho, theta, threshold, np.array([]),
+#                             min_line_length, max_line_gap)
     
-    # Draw the detected lines on the original frame
-    line_image = np.zeros_like(frame)
-    if lines is not None:
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            cv2.line(line_image, (x1, y1), (x2, y2), (0, 0, 255), 3)
+#     # Draw the detected lines on the original frame
+#     line_image = np.zeros_like(frame)
+#     if lines is not None:
+#         for line in lines:
+#             x1, y1, x2, y2 = line[0]
+#             cv2.line(line_image, (x1, y1), (x2, y2), (0, 0, 255), 3)
     
-    # Blend the original frame with the line image
-    blended_image = cv2.addWeighted(frame, 0.8, line_image, 1, 0)
+#     # Blend the original frame with the line image
+#     blended_image = cv2.addWeighted(frame, 0.8, line_image, 1, 0)
     
-    return blended_image
+#     return blended_image
+
+
+#detects red and blue color
+# def detect_lanes(frame):
+#     # Convert to grayscale
+#     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    
+#     # Apply Gaussian blur to smooth the image
+#     blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    
+#     # Perform Canny edge detection
+#     edges = cv2.Canny(blur, 50, 150)
+    
+#     # Mask the edges image to only show the region of interest
+#     mask = np.zeros_like(edges)
+#     cv2.fillPoly(mask, [vertices], 255)
+#     masked_edges = cv2.bitwise_and(edges, mask)
+    
+#     # Perform Hough transform to detect lines
+#     lines = cv2.HoughLinesP(masked_edges, rho, theta, threshold, np.array([]),
+#                             min_line_length, max_line_gap)
+    
+#     # Create blank images for the left and right lines
+#     left_line_image = np.zeros_like(frame)
+#     right_line_image = np.zeros_like(frame)
+    
+#     # Detect the left and right lines based on their slopes
+#     if lines is not None:
+#         for line in lines:
+#             x1, y1, x2, y2 = line[0]
+#             slope = (y2 - y1) / (x2 - x1)
+#             if slope < 0:  # Left line
+#                 cv2.line(left_line_image, (x1, y1), (x2, y2), (255, 0, 0), 3)
+#             elif slope > 0:  # Right line
+#                 cv2.line(right_line_image, (x1, y1), (x2, y2), (0, 0, 255), 3)
+    
+#     # Blend the original frame with the left and right line images
+#     blended_image = cv2.addWeighted(frame, 0.8, left_line_image, 1, 0)
+#     blended_image = cv2.addWeighted(blended_image, 0.8, right_line_image, 1, 0)
+    
+#     return blended_image
+
+
+
 
 while cap.isOpened():
     ret, frame = cap.read()
