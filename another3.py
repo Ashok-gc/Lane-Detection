@@ -111,7 +111,11 @@ def region_of_interest(img, vertices):
 def hough_lines(img, rho, theta, threshold, min_line_length, max_line_gap):
     return cv2.HoughLinesP(img, rho, theta, threshold, np.array([]), min_line_length, max_line_gap)
 
+
 # def draw_lines(image, lines, left_color, right_color, thickness):
+#     if lines is None:
+#         return
+
 #     left_lines = []
 #     right_lines = []
 #     min_slope = 0.5
@@ -144,7 +148,7 @@ def hough_lines(img, rho, theta, threshold, min_line_length, max_line_gap):
 #     draw_lane_lines(right_lines, right_color)
 def draw_lines(image, lines, left_color, right_color, thickness):
     if lines is None:
-        return
+        return None, None
 
     left_lines = []
     right_lines = []
@@ -173,28 +177,74 @@ def draw_lines(image, lines, left_color, right_color, thickness):
             x1, x2 = (y - intercept) / slope
             x1, x2 = int(x1), int(x2)
             cv2.line(image, (x1, y1), (x2, y2), color, thickness)
+            return [(x1, y1), (x2, y2)]
+        return None
 
-    draw_lane_lines(left_lines, left_color)
-    draw_lane_lines(right_lines, right_color)
+    left_points = draw_lane_lines(left_lines, left_color)
+    right_points = draw_lane_lines(right_lines, right_color)
 
+    return left_points, right_points
+
+
+# def process_image(image, parameters):
+#     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+#     yellow_mask = cv2.inRange(hsv, np.array([20, 100, 100]), np.array([40, 255, 255]))
+#     white_mask = cv2.inRange(hsv, np.array([0, 0, 200]), np.array([180, 30, 255]))
+#     color_mask = cv2.bitwise_or(yellow_mask, white_mask)
+    
+#     gray = grayscale(image)
+#     blurred_gray = gaussian_blur(gray, parameters["gaussian_kernel"])
+#     edges = canny(blurred_gray, parameters["canny_low"], parameters["canny_high"])
+#     color_edges = cv2.bitwise_and(edges, color_mask)
+#     masked_edges = region_of_interest(color_edges, parameters["roi_vertices"])
+#     lines = hough_lines(masked_edges, parameters["hough_rho"],
+#         parameters["hough_theta"], parameters["hough_threshold"], parameters["min_line_length"], parameters["max_line_gap"])
+#     line_image = np.copy(image)
+#     draw_lines(line_image, lines, parameters["left_color"], parameters["right_color"], parameters["line_thickness"])
+
+
+#     left_points, right_points = draw_lines(line_image, lines, parameters["left_color"], parameters["right_color"], parameters["line_thickness"])
+
+#     if left_points is not None and right_points is not None:
+#         cv2.fillPoly(line_image, [np.array([left_points[0], left_points[1], right_points[1], right_points[0]])], (0, 255, 0))
+
+#     return line_image
 
 def process_image(image, parameters):
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    yellow_mask = cv2.inRange(hsv, np.array([20, 100, 100]), np.array([40, 255, 255]))
-    white_mask = cv2.inRange(hsv, np.array([0, 0, 200]), np.array([180, 30, 255]))
-    color_mask = cv2.bitwise_or(yellow_mask, white_mask)
-    
-    gray = grayscale(image)
-    blurred_gray = gaussian_blur(gray, parameters["gaussian_kernel"])
-    edges = canny(blurred_gray, parameters["canny_low"], parameters["canny_high"])
-    color_edges = cv2.bitwise_and(edges, color_mask)
-    masked_edges = region_of_interest(color_edges, parameters["roi_vertices"])
-    lines = hough_lines(masked_edges, parameters["hough_rho"],
-        parameters["hough_theta"], parameters["hough_threshold"], parameters["min_line_length"], parameters["max_line_gap"])
+    def color_filter(img):
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+        # Define color ranges for white and yellow
+        white_lower = np.array([0, 0, 200])
+        white_upper = np.array([180, 25, 255])
+
+        yellow_lower = np.array([20, 80, 80])
+        yellow_upper = np.array([40, 255, 255])
+
+        # Threshold the HSV image to get only white and yellow colors
+        white_mask = cv2.inRange(hsv, white_lower, white_upper)
+        yellow_mask = cv2.inRange(hsv, yellow_lower, yellow_upper)
+
+        # Combine the two masks
+        combined_mask = cv2.bitwise_or(white_mask, yellow_mask)
+
+        # Bitwise-AND the mask and the original image
+        return cv2.bitwise_and(img, img, mask=combined_mask)
+
+    filtered_image = color_filter(image)
+    gray = grayscale(filtered_image)
+    blurred = gaussian_blur(gray, parameters["gaussian_kernel"])
+    edges = canny(blurred, parameters["canny_low"], parameters["canny_high"])
+    masked_edges = region_of_interest(edges, parameters["roi_vertices"])
+    lines = hough_lines(masked_edges, parameters["hough_rho"], parameters["hough_theta"], parameters["hough_threshold"], parameters["min_line_length"], parameters["max_line_gap"])
     line_image = np.copy(image)
-    draw_lines(line_image, lines, parameters["left_color"], parameters["right_color"], parameters["line_thickness"])
+    left_points, right_points = draw_lines(line_image, lines, parameters["left_color"], parameters["right_color"], parameters["line_thickness"])
+
+    if left_points is not None and right_points is not None:
+        cv2.fillPoly(line_image, [np.array([left_points[0], left_points[1], right_points[1], right_points[0]])], (0, 255, 0))
 
     return line_image
+
 
 def main(input_video, output_video, parameters):
     cap = cv2.VideoCapture(input_video)
