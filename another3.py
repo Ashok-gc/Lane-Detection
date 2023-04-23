@@ -268,7 +268,7 @@ def main(input_video, output_video, parameters):
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    input_video = 'project_video.mp4'
+    input_video = 'clip.mp4'
     output_video = 'output_video.mp4'
 
     parameters = {
