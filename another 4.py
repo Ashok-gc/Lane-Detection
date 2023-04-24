@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import cv2
 import pickle
@@ -167,14 +168,20 @@ def process_image(image):
     cv2.putText(result,'Vehicle is '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center',(50,100), cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
 
         # Display the result in a popup window
+
     cv2.imshow('Detected Lanes', result)
-    cv2.waitKey(1)
+    key=cv2.waitKey(1)
+        # Exit if the user presses the 'q' key
+    if key & 0xFF == ord('q'):
+        cv2.destroyAllWindows()
+        sys.exit(0)
+
 
 
     return result
     
+output_vid = 'lane_tracker.mp4'
 input_vid = 'project_video.mp4'
-output_vid = 'lane_tracker1.mp4'
 
 clip1 = VideoFileClip(input_vid)
 video_clip = clip1.fl_image(process_image)
