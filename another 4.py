@@ -10,6 +10,7 @@ from IPython.display import HTML
 dist_pickle = pickle.load(open("calibration_pickle.p", "rb"))
 mtx = dist_pickle["mtx"]
 dist = dist_pickle["dist"]
+processed_frames = []
 
 def abs_sobel_thresh(img, orient='x', sobel_kernel=3, thresh=(0,255)):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -163,9 +164,18 @@ def process_image(image):
     side_pos = 'left'
     if center_diff <= 0:
         side_pos = 'right'
+    if center_diff > 0.2:
+        turn_direction = 'Turn Right'
+    elif center_diff < -0.2:
+        turn_direction = 'Turn Left'
+    else:
+        turn_direction = 'Straight'
+
 
     cv2.putText(result,'Radius of curvature = '+str(round(curverad,3))+'(m)',(50,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
     cv2.putText(result,'Vehicle is '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center',(50,100), cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
+    cv2.putText(result, turn_direction, (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
 
         # Display the result in a popup window
 
@@ -175,7 +185,9 @@ def process_image(image):
     if key & 0xFF == ord('q'):
         cv2.destroyAllWindows()
         sys.exit(0)
-
+    
+    
+    processed_frames.append(result)
 
 
     return result
@@ -185,5 +197,8 @@ input_vid = 'project_video.mp4'
 
 clip1 = VideoFileClip(input_vid)
 video_clip = clip1.fl_image(process_image)
-video_clip.write_videofile(output_vid, audio=False)
+video_clip.write_videofile(output_vid, audio=False, fps=30)
+
+
+
 cv2.destroyAllWindows()
