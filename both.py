@@ -27,6 +27,11 @@ thres = 0.45
 # Focal length of camera (in mm)
 focalLength = 10
 
+# Define the background color
+bg_color = (100, 100, 100)
+
+
+
 # Lane detection
 dist_pickle = pickle.load(open("calibration_pickle.p", "rb"))
 mtx = dist_pickle["mtx"]
@@ -219,9 +224,26 @@ def process_image(img):
             cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 0), 2)
 
-    cv2.putText(result,'Radius of curvature = '+str(round(curverad,3))+'(m)',(50,50),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,0),1)
-    cv2.putText(result,'Vehicle Position: '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center',(50,75), cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,0),1)
-    cv2.putText(result, 'Assistance:'+ ' '+turn_direction, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+        
+
+    # Get the width of the image
+    img_width = result.shape[1]
+
+    # Draw a filled rectangle as the background
+    cv2.rectangle(result, (0, 0), (img_width, 150), bg_color, -1)
+
+    # Add the text on top of the background
+    cv2.putText(result, 'Lane Status', (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+    cv2.putText(result, 'Radius of curvature = '+str(round(curverad,3))+'(m)', (50, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    cv2.putText(result, 'Vehicle Position: '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center', (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    cv2.putText(result, 'Assistance:'+ ' '+turn_direction, (50, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+
+
+    # # Display final result
+    # cv2.putText(result,'Lane Status',(100,50),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,0),2)
+    # cv2.putText(result,'Radius of curvature = '+str(round(curverad,3))+'(m)',(50,75),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,0),1)
+    # cv2.putText(result,'Vehicle Position: '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center',(50,100), cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,0),1)
+    # cv2.putText(result, 'Assistance:'+ ' '+turn_direction, (50, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
 
 
@@ -231,7 +253,7 @@ def process_image(img):
 
 
 # For video clip or real-time
-cap = cv2.VideoCapture('clip.mp4')
+cap = cv2.VideoCapture('project_video.mp4')
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
 out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720)) # output file name, codec, fps, size of frames
@@ -254,6 +276,7 @@ while True:
     
 
 # Release video capture and close windows
+cv2.imshow('Result', result)
 cap.release()
 out.release()
 cv2.destroyAllWindows()
