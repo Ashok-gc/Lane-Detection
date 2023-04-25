@@ -199,6 +199,8 @@ clip1 = VideoFileClip(input_vid)
 video_clip = clip1.fl_image(process_image)
 video_clip.write_videofile(output_vid, audio=False, fps=30)
 
-
+# Create a new video file using the processed frames
+new_clip = ImageSequenceClip(processed_frames, fps=30)
+new_clip.write_videofile('processed_video.mp4', fps=30)
 
 cv2.destroyAllWindows()
