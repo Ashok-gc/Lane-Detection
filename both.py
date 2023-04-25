@@ -218,13 +218,11 @@ def process_image(img):
         for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
             # Calculate distance of object from camera (in meters)
             distance = round((2 * focalLength) / box[2], 2)
-            cv2.rectangle(img, box, color=(0, 0, 0), thickness=3)
+            cv2.rectangle(img, box, color=(0, 255, 0), thickness=3)
             cv2.putText(img, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30),
-                        cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 0), 2)
+                        cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
             cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
-                        cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 0), 2)
-
-        
+                        cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
 
     # Get the width of the image
     img_width = result.shape[1]
