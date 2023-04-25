@@ -230,11 +230,31 @@ def process_image(img):
     # Draw a filled rectangle as the background
     cv2.rectangle(result, (0, 0), (img_width, 150), bg_color, -1)
 
+    # Define the list of detected objects and their confidence levels
+    # detected_objects = [('car', 0.85), ('person', 0.75), ('bike', 0.65)]
+
+    # Format the detected objects string
+    # objects_string = 'Detected objects: '
+    # for obj, conf in detected_objects:
+    #     objects_string += f'{obj} ({conf:.2f}), '
+    # objects_string = objects_string[:-2]
+
+
     # Add the text on top of the background
     cv2.putText(result, 'Lane Status', (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+    #radius of curvature
     cv2.putText(result, 'Radius of curvature = '+str(round(curverad,3))+'(m)', (50, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    #vehicle position
     cv2.putText(result, 'Vehicle Position: '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center', (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    # Assistance
     cv2.putText(result, 'Assistance:'+ ' '+turn_direction, (50, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    # detected objects
+    cv2.putText(result, 'Detected Objects', (800, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+
+    # cv2.putText(result, objects_string, (800, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+
+
+    
 
 
     # # Display final result
