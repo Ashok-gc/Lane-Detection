@@ -31,6 +31,10 @@ focalLength = 10
 bg_color = (100, 100, 100)
 
 
+#black color
+main_color=(0,0,0)
+
+
 
 # Lane detection
 dist_pickle = pickle.load(open("calibration_pickle.p", "rb"))
@@ -112,8 +116,10 @@ def draw_thumbnails(img_cp, img, window_list, thumb_w=100, thumb_h=80, off_x=30,
 def process_image(img):
 
 
-    # img = np.copy(img)
-    
+    img = np.copy(img)
+    img_copy = np.copy(img)
+
+
     # # Undistort the input image
     # undistorted_img = np.zeros_like(img)
     # undistorted_img = cv2.undistort(img, mtx, dist, None, mtx)
@@ -217,13 +223,12 @@ def process_image(img):
         turn_direction = 'Turn Left'
     else:
         turn_direction = 'Straight'
-        
 
     # Object detection
     classIds, confs, bbox = net.detect(img, confThreshold=thres)
 
      # Initialize a list to store detected objects and their distances
-    # detected_objects = []
+    detected_objects = []
     detected_object_imgs = []
 
 
@@ -235,15 +240,21 @@ def process_image(img):
             distance = round((2 * focalLength) / box[2], 2)
             cv2.rectangle(img, box, color=(0, 255, 0), thickness=3)
             object_name = classNames[classId - 1].upper()
-            # detected_objects.append(f"{object_name}: {distance}m")
+            detected_objects.append(f"{object_name}: {distance}m")
             # Crop the detected object image
             x, y, w, h = box
-            cropped_img = img[y:y+h, x:x+w]
+            cropped_img = img_copy[y:y+h, x:x+w]
             detected_object_imgs.append(cropped_img)
+            # cv2.putText(img, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30),
+            #             cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+            # cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
+            #             cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+            
             cv2.putText(img, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
             cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+
             
 
 
@@ -255,11 +266,14 @@ def process_image(img):
     
 
     # Draw a filled rectangle as the background
+
+    # cv2.rectangle(result, (0, 0), (img_width,1200), main_color, -1)
+
     cv2.rectangle(result, (0, 0), (img_width, 150), bg_color, -1)
 
 
     # Add the text on top of the background
-    cv2.putText(result, 'Lane Status', (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+    cv2.putText(result, 'Lane Status', (100, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
     #radius of curvature
     cv2.putText(result, 'Radius of curvature = '+str(round(curverad,3))+'(m)', (50, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
     #vehicle position
@@ -269,8 +283,8 @@ def process_image(img):
     # detected objects
     cv2.putText(result, 'Detected Objects', (850, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
-    # for i, detected_object in enumerate(detected_objects):
-    #     cv2.putText(result, detected_object, (800, 50 + 25 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    for i, detected_object in enumerate(detected_objects):
+        cv2.putText(result, detected_object, (400, 20 + 25 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
     # Display detected object images at the top
     # spacing = 20
@@ -285,7 +299,7 @@ def process_image(img):
     #     current_x += resized_width + spacing
     # Display detected object images at the top
     spacing = 20
-    current_x = 800
+    current_x = 600
     max_width = img_width - spacing
 
     for obj_img in detected_object_imgs:
@@ -308,7 +322,7 @@ def process_image(img):
 
 
 # For video clip or real-time
-cap = cv2.VideoCapture('project_video.mp4')
+cap = cv2.VideoCapture('pv.mp4')
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
 out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720)) # output file name, codec, fps, size of frames
