@@ -30,6 +30,8 @@ focalLength = 10
 # Define the background color
 bg_color = (100, 100, 100)
 
+line_color = (0, 0, 255)
+
 
 
 # Lane detection
@@ -112,7 +114,8 @@ def draw_thumbnails(img_cp, img, window_list, thumb_w=100, thumb_h=80, off_x=30,
 def process_image(img):
 
 
-    # img = np.copy(img)
+    img = np.copy(img)
+    img_copy = np.copy(img)
     
     # # Undistort the input image
     # undistorted_img = np.zeros_like(img)
@@ -223,7 +226,7 @@ def process_image(img):
     classIds, confs, bbox = net.detect(img, confThreshold=thres)
 
      # Initialize a list to store detected objects and their distances
-    # detected_objects = []
+    detected_objects = []
     detected_object_imgs = []
 
 
@@ -235,10 +238,10 @@ def process_image(img):
             distance = round((2 * focalLength) / box[2], 2)
             cv2.rectangle(img, box, color=(0, 255, 0), thickness=3)
             object_name = classNames[classId - 1].upper()
-            # detected_objects.append(f"{object_name}: {distance}m")
+            detected_objects.append(f"{object_name}: {distance}m")
             # Crop the detected object image
             x, y, w, h = box
-            cropped_img = img[y:y+h, x:x+w]
+            cropped_img = img_copy[y:y+h, x:x+w]
             detected_object_imgs.append(cropped_img)
             cv2.putText(img, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
@@ -259,18 +262,25 @@ def process_image(img):
 
 
     # Add the text on top of the background
-    cv2.putText(result, 'Lane Status', (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+    cv2.putText(result, 'Lane Status', (80, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
     #radius of curvature
-    cv2.putText(result, 'Radius of curvature = '+str(round(curverad,3))+'(m)', (50, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    cv2.putText(result, 'Radius of curvature = '+str(round(curverad,3))+'(m)', (30, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
     #vehicle position
-    cv2.putText(result, 'Vehicle Position: '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center', (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    cv2.putText(result, 'Vehicle Position: '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center', (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
     # Assistance
-    cv2.putText(result, 'Assistance:'+ ' '+turn_direction, (50, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-    # detected objects
-    cv2.putText(result, 'Detected Objects', (850, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+    cv2.putText(result, 'Direction Assistance:'+ ' '+turn_direction, (30, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
-    # for i, detected_object in enumerate(detected_objects):
-    #     cv2.putText(result, detected_object, (800, 50 + 25 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+# Draw a vertical line to separate text
+    line_height = result.shape[0] // 5  # set the line height to half of the image height
+    cv2.line(result, (360, 0), (360, line_height), (0, 0, 0), thickness=1)
+
+
+    # detected objects
+    cv2.putText(result, 'Detected Objects', (830, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+
+    # Display detected objects names and their distances
+    for i, detected_object in enumerate(detected_objects):
+        cv2.putText(result, detected_object, (380, 20 + 25 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
     # Display detected object images at the top
     # spacing = 20
@@ -308,7 +318,7 @@ def process_image(img):
 
 
 # For video clip or real-time
-cap = cv2.VideoCapture('project_video.mp4')
+cap = cv2.VideoCapture('pv.mp4')
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
 out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720)) # output file name, codec, fps, size of frames

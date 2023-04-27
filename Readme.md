@@ -17,6 +17,8 @@ This code performs lane detection on a video stream using the OpenCV library in 
 through video `python lane_detection.py` 
 or
 through camera: `python lane_detecction_camera.py`
+or
+final: `final.py`
 4. The output video with the detected lanes will be displayed on the screen.
 5. Press 'q' on the keyboard to quit the program.
 

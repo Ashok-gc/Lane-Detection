@@ -31,6 +31,10 @@ focalLength = 10
 bg_color = (100, 100, 100)
 
 
+# Consider objects closer than 1 meters as too close
+close_threshold = 1 
+
+
 #black color
 main_color=(0,0,0)
 
@@ -118,11 +122,6 @@ def process_image(img):
 
     img = np.copy(img)
     img_copy = np.copy(img)
-
-
-    # # Undistort the input image
-    # undistorted_img = np.zeros_like(img)
-    # undistorted_img = cv2.undistort(img, mtx, dist, None, mtx)
 
     # Lane detection
     img = cv2.undistort(img, mtx, dist, None, mtx)
@@ -233,6 +232,7 @@ def process_image(img):
 
 
 
+
     # Draw bounding box and label for each object detected
     if len(classIds) != 0:
         for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
@@ -254,9 +254,28 @@ def process_image(img):
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
             cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+    
+    # Initialize a flag to check if any object is too close
+    object_too_close = False
 
-            
+    if len(classIds) != 0:
+        for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
 
+            # Calculate distance of object from camera (in meters)
+            distance = round((2 * focalLength) / box[2], 2)
+
+            # Check if the detected object is too close
+            if distance < close_threshold:
+                object_too_close = True
+
+
+
+
+    if object_too_close:
+        # Change the inner_lane color to red if an object is too close
+        cv2.fillPoly(road, [inner_lane], color=[0, 0, 255])
+    else:
+        cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
 
 
 
@@ -279,12 +298,15 @@ def process_image(img):
     #vehicle position
     cv2.putText(result, 'Vehicle Position: '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center', (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
     # Assistance
-    cv2.putText(result, 'Assistance:'+ ' '+turn_direction, (50, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    cv2.putText(result, 'Direction Assistance:'+ ' '+turn_direction, (50, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    
+
     # detected objects
     cv2.putText(result, 'Detected Objects', (850, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
+    # Display detected objects names and their distances
     for i, detected_object in enumerate(detected_objects):
-        cv2.putText(result, detected_object, (400, 20 + 25 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+        cv2.putText(result, detected_object, (380, 20 + 25 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
     # Display detected object images at the top
     # spacing = 20
@@ -297,6 +319,9 @@ def process_image(img):
 
     #     result[25:125, current_x:current_x + resized_width] = resized_obj_img
     #     current_x += resized_width + spacing
+
+
+
     # Display detected object images at the top
     spacing = 20
     current_x = 600
@@ -314,18 +339,18 @@ def process_image(img):
 
         result[25:125, current_x:current_x + resized_width] = resized_obj_img
         current_x += resized_width + spacing
+    
+        final_result = cv2.addWeighted(result, 1, img, 0.5, 0)
+        return final_result
 
-
-
-    final_result = cv2.addWeighted(result, 1, img, 0.5, 0)
-    return final_result
 
 
 # For video clip or real-time
 cap = cv2.VideoCapture('pv.mp4')
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
-out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720)) # output file name, codec, fps, size of frames
+out = cv2.VideoWriter('recorded_output1.mp4', fourcc, 25, (1280, 720)) # output file name, codec, fps, size of frames
+    
 
 while True:
     success, img = cap.read()
