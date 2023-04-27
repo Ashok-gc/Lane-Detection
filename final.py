@@ -30,9 +30,14 @@ focalLength = 10
 # Define the background color
 bg_color = (100, 100, 100)
 
+#line color
 line_color = (0, 0, 255)
 
+# Set threshold distance for objects
+object_distance_threshold = 1 # meters
 
+# Initialize a flag to check if any object is too close
+object_too_close = False
 
 # Lane detection
 dist_pickle = pickle.load(open("calibration_pickle.p", "rb"))
@@ -247,10 +252,36 @@ def process_image(img):
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
             cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-            
 
 
+# not working---------------------------------------------------------------------------------------------------------------
 
+          
+            # Check if the object is too close
+            if distance < object_distance_threshold:
+                object_too_close = True  
+                
+                  
+
+    
+
+    if object_too_close:
+        # Change the inner_lane color to red if an object is too close
+        cv2.fillPoly(road, [inner_lane], color=[0, 0, 255])
+
+        # Display warning text when an object is too close
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        text_position = (100, 100)
+        font_scale = 1.5
+        font_thickness = 2
+        warning_text = "WARNING: Object too close!"
+        warning_color = (0, 0, 255)
+
+        cv2.putText(result, warning_text, text_position, font, font_scale, warning_color, font_thickness)
+    else:
+        cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
+
+# not working---------------------------------------------------------------------------------------------------------------
 
     # Get the width of the image
     img_width = result.shape[1]
@@ -293,6 +324,8 @@ def process_image(img):
 
     #     result[25:125, current_x:current_x + resized_width] = resized_obj_img
     #     current_x += resized_width + spacing
+
+
     # Display detected object images at the top
     spacing = 20
     current_x = 500
