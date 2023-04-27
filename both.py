@@ -40,7 +40,6 @@ processed_frames = []
 
 
 # Functions for lane detection
-# ... (same as the previous code, starting from "def abs_sobel_thresh(img, orient='x', sobel_kernel=3, thresh=(0,255)):")
 def abs_sobel_thresh(img, orient='x', sobel_kernel=3, thresh=(0,255)):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     if orient == 'x':
@@ -111,9 +110,15 @@ def draw_thumbnails(img_cp, img, window_list, thumb_w=100, thumb_h=80, off_x=30,
 
 
 def process_image(img):
-    # Lane detection
-    # ... (same as the previous code, starting from "img = cv2.undistort(img, mtx, dist, None, mtx)")
 
+
+    # img = np.copy(img)
+    
+    # # Undistort the input image
+    # undistorted_img = np.zeros_like(img)
+    # undistorted_img = cv2.undistort(img, mtx, dist, None, mtx)
+
+    # Lane detection
     img = cv2.undistort(img, mtx, dist, None, mtx)
 
     preprocessImage = np.zeros_like(img[:,:,0])
@@ -214,15 +219,14 @@ def process_image(img):
         turn_direction = 'Straight'
         
 
-
-    # cv2.putText(result,'Radius of curvature = '+str(round(curverad,3))+'(m)',(50,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
-    # cv2.putText(result,'Vehicle is '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center',(50,100), cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
-    # cv2.putText(result, turn_direction, (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-
-    #displaying detected objects
-
     # Object detection
     classIds, confs, bbox = net.detect(img, confThreshold=thres)
+
+     # Initialize a list to store detected objects and their distances
+    # detected_objects = []
+    detected_object_imgs = []
+
+
 
     # Draw bounding box and label for each object detected
     if len(classIds) != 0:
@@ -230,10 +234,20 @@ def process_image(img):
             # Calculate distance of object from camera (in meters)
             distance = round((2 * focalLength) / box[2], 2)
             cv2.rectangle(img, box, color=(0, 255, 0), thickness=3)
+            object_name = classNames[classId - 1].upper()
+            # detected_objects.append(f"{object_name}: {distance}m")
+            # Crop the detected object image
+            x, y, w, h = box
+            cropped_img = img[y:y+h, x:x+w]
+            detected_object_imgs.append(cropped_img)
             cv2.putText(img, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
             cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+            
+
+
+
 
     # Get the width of the image
     img_width = result.shape[1]
@@ -242,15 +256,6 @@ def process_image(img):
 
     # Draw a filled rectangle as the background
     cv2.rectangle(result, (0, 0), (img_width, 150), bg_color, -1)
-
-    # Define the list of detected objects and their confidence levels
-    # detected_objects = [('car', 0.85), ('person', 0.75), ('bike', 0.65)]
-
-    # Format the detected objects string
-    # objects_string = 'Detected objects: '
-    # for obj, conf in detected_objects:
-    #     objects_string += f'{obj} ({conf:.2f}), '
-    # objects_string = objects_string[:-2]
 
 
     # Add the text on top of the background
@@ -262,22 +267,39 @@ def process_image(img):
     # Assistance
     cv2.putText(result, 'Assistance:'+ ' '+turn_direction, (50, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
     # detected objects
-    cv2.putText(result, 'Detected Objects', (800, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+    cv2.putText(result, 'Detected Objects', (850, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
-    
+    # for i, detected_object in enumerate(detected_objects):
+    #     cv2.putText(result, detected_object, (800, 50 + 25 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
-    # cv2.putText(result, objects_string, (800, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    # Display detected object images at the top
+    # spacing = 20
+    # current_x = 800
+    # for obj_img in detected_object_imgs:
+    #     h, w, _ = obj_img.shape
+    #     scale = 100 / h
+    #     resized_width = int(w * scale)
+    #     resized_obj_img = cv2.resize(obj_img, (resized_width, 100))
 
+    #     result[25:125, current_x:current_x + resized_width] = resized_obj_img
+    #     current_x += resized_width + spacing
+    # Display detected object images at the top
+    spacing = 20
+    current_x = 500
+    max_width = img_width - spacing
 
-    
+    for obj_img in detected_object_imgs:
+        h, w, _ = obj_img.shape
+        scale = 100 / h
+        resized_width = int(w * scale)
+        resized_obj_img = cv2.resize(obj_img, (resized_width, 100))
 
+        if current_x + resized_width + spacing > max_width:
+            # If there's not enough space to display the resized object image, break the loop
+            break
 
-    # # Display final result
-    # cv2.putText(result,'Lane Status',(100,50),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,0),2)
-    # cv2.putText(result,'Radius of curvature = '+str(round(curverad,3))+'(m)',(50,75),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,0),1)
-    # cv2.putText(result,'Vehicle Position: '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center',(50,100), cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,0),1)
-    # cv2.putText(result, 'Assistance:'+ ' '+turn_direction, (50, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-
+        result[25:125, current_x:current_x + resized_width] = resized_obj_img
+        current_x += resized_width + spacing
 
 
 
@@ -294,8 +316,6 @@ out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720)) # output f
 while True:
     success, img = cap.read()
     result = process_image(img)
-
-
 
     out.write(result)
 

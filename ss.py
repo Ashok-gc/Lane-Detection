@@ -267,7 +267,7 @@ def process_image(img):
     # Assistance
     cv2.putText(result, 'Assistance:'+ ' '+turn_direction, (50, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
     # detected objects
-    cv2.putText(result, 'Detected Objects', (800, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+    cv2.putText(result, 'Detected Objects', (850, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
     # for i, detected_object in enumerate(detected_objects):
     #     cv2.putText(result, detected_object, (800, 50 + 25 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
