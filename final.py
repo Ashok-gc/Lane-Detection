@@ -34,7 +34,7 @@ bg_color = (100, 100, 100)
 line_color = (0, 0, 255)
 
 # Set threshold distance for objects
-object_distance_threshold = 1 # meters
+object_distance_threshold = 0.1 # meters
 
 # Initialize a flag to check if any object is too close
 object_too_close = False
@@ -117,7 +117,6 @@ def draw_thumbnails(img_cp, img, window_list, thumb_w=100, thumb_h=80, off_x=30,
 
 
 def process_image(img):
-
 
     img = np.copy(img)
     img_copy = np.copy(img)
@@ -257,29 +256,28 @@ def process_image(img):
 # not working---------------------------------------------------------------------------------------------------------------
 
           
+            object_too_close = False
+
             # Check if the object is too close
             if distance < object_distance_threshold:
                 object_too_close = True  
-                
-                  
 
-    
+            if object_too_close:
+                # Change the inner_lane color to red if an object is too close
+                cv2.fillPoly(road, [inner_lane], color=[0, 0, 255])
 
-    if object_too_close:
-        # Change the inner_lane color to red if an object is too close
-        cv2.fillPoly(road, [inner_lane], color=[0, 0, 255])
+                # Display warning text when an object is too close
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                warning_text = "WARNING: Object too close!"
+                text_position = (100, 500)
+                font_scale = 1.5
+                font_thickness = 2
 
-        # Display warning text when an object is too close
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        text_position = (100, 100)
-        font_scale = 1.5
-        font_thickness = 2
-        warning_text = "WARNING: Object too close!"
-        warning_color = (0, 0, 255)
+                warning_color = (0, 0, 255)
 
-        cv2.putText(result, warning_text, text_position, font, font_scale, warning_color, font_thickness)
-    else:
-        cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
+                cv2.putText(result, warning_text, text_position, font, font_scale, warning_color, font_thickness)
+            else:
+                cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
 
 # not working---------------------------------------------------------------------------------------------------------------
 
