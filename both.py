@@ -99,6 +99,16 @@ def window_mask(width, height, img_ref, center, level):
     max(0, int(center - width / 2)):min(int(center + width / 2), img_ref.shape[1])] = 1
     return output
 
+def draw_thumbnails(img_cp, img, window_list, thumb_w=100, thumb_h=80, off_x=30, off_y=30):
+
+    for i, bbox in enumerate(window_list):
+        thumbnail = img[bbox[0][1]:bbox[1][1], bbox[0][0]:bbox[1][0]]
+        vehicle_thumb = cv2.resize(thumbnail, dsize=(thumb_w, thumb_h))
+        start_x = 300 + (i+1) * off_x + i * thumb_w
+        img_cp[off_y + 30:off_y + thumb_h + 30, start_x:start_x + thumb_w, :] = vehicle_thumb
+
+
+
 
 def process_image(img):
     # Lane detection
@@ -202,13 +212,14 @@ def process_image(img):
         turn_direction = 'Turn Left'
     else:
         turn_direction = 'Straight'
+        
 
 
     # cv2.putText(result,'Radius of curvature = '+str(round(curverad,3))+'(m)',(50,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
     # cv2.putText(result,'Vehicle is '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center',(50,100), cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
     # cv2.putText(result, turn_direction, (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
-
+    #displaying detected objects
 
     # Object detection
     classIds, confs, bbox = net.detect(img, confThreshold=thres)
@@ -226,6 +237,8 @@ def process_image(img):
 
     # Get the width of the image
     img_width = result.shape[1]
+
+    
 
     # Draw a filled rectangle as the background
     cv2.rectangle(result, (0, 0), (img_width, 150), bg_color, -1)
@@ -250,6 +263,8 @@ def process_image(img):
     cv2.putText(result, 'Assistance:'+ ' '+turn_direction, (50, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
     # detected objects
     cv2.putText(result, 'Detected Objects', (800, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+
+    
 
     # cv2.putText(result, objects_string, (800, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
