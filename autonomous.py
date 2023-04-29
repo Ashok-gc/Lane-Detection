@@ -30,7 +30,7 @@ thres = 0.45
 focalLength = 10
 
 # Define the background color
-bg_color = (7, 59, 59)
+bg_color = (200, 200, 200)
 
 #line color
 line_color = (0, 0, 255)
@@ -121,6 +121,9 @@ def process_image(img):
     #set global variables
     global object_too_close
     global warning_displayed
+
+    global objects_detected
+    objects_detected = False
 
     object_too_close = False
 
@@ -245,54 +248,17 @@ def process_image(img):
     # Object detection
     classIds, confs, bbox = net.detect(img, confThreshold=thres)
 
+    global objects_detected
+    objects_detected = len(classIds) != 0
      # Initialize a list to store detected objects and their distances
     detected_objects = []
     detected_object_imgs = []
 
 
 
+
     # Draw bounding box and label for each object detected
-    # if len(classIds) != 0:
-    #     for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
-    #         # Calculate distance of object from camera (in meters)
-    #         distance = round((2 * focalLength) / box[2], 2)
-    #         cv2.rectangle(img, box, color=(255,0,0), thickness=3)
-    #         object_name = classNames[classId - 1].upper()
-    #         detected_objects.append(f"{object_name}: {distance}m")
-    #         # Crop the detected object image
-    #         x, y, w, h = box
-    #         cropped_img = img_copy[y:y+h, x:x+w]
-    #         detected_object_imgs.append(cropped_img)
-    #         cv2.putText(img, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30),
-    #                     cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-    #         # cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
-    #         #             cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-    #         cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
-    #                     cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-    # if len(classIds) != 0:
-    #     for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
-    #         # Calculate distance of object from camera (in meters)
-    #         distance = round((2 * focalLength) / box[2], 2)
-    #         cv2.rectangle(img, box, color=(255,0,0), thickness=3)
-    #         object_name = classNames[classId - 1].upper()
-    #         detected_objects.append(f"{object_name}: {distance}m")
-    #         # Crop the detected object image
-    #         x, y, w, h = box
-    #         cropped_img = img_copy[y:y+h, x:x+w]
-    #         detected_object_imgs.append(cropped_img)
-            
-    #         # Determine label background size based on box size
-    #         label_size, base_line = cv2.getTextSize(object_name, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
-    #         label_w = max(label_size[0], w)
-    #         label_h = label_size[1] + 10
-            
-    #         # Draw object name above detection box with background color
-    #         label_ymin = max(y - label_h, 0)
-    #         cv2.rectangle(img, (x, label_ymin), (x + label_w, y), (255, 255, 255), cv2.FILLED)
-    #         cv2.putText(img, object_name, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
-            
-    #         cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
-    #                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
     if len(classIds) != 0:
         for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
             # Calculate distance of object from camera (in meters)
@@ -318,10 +284,6 @@ def process_image(img):
             
             cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-
-
-
-
 
 # not working---------------------------------------------------------------------------------------------------------------
 
