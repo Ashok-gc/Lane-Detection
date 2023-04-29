@@ -4,6 +4,8 @@ import numpy as np
 import pickle
 from tracker import tracker
 from moviepy.editor import VideoFileClip
+# import warnings
+
 
 # Object detection
 # Load class names
@@ -28,13 +30,13 @@ thres = 0.45
 focalLength = 10
 
 # Define the background color
-bg_color = (100, 100, 100)
+bg_color = (200, 200, 200)
 
 #line color
 line_color = (0, 0, 255)
 
 # Set threshold distance for objects
-object_distance_threshold = 0.1 # meters
+object_distance_threshold = 0.6 # meters
 
 # Initialize a flag to check if any object is too close
 object_too_close = False
@@ -114,26 +116,32 @@ def draw_thumbnails(img_cp, img, window_list, thumb_w=100, thumb_h=80, off_x=30,
         img_cp[off_y + 30:off_y + thumb_h + 30, start_x:start_x + thumb_w, :] = vehicle_thumb
 
 
-
-
 def process_image(img):
 
+    #set global variables
+    global object_too_close
+    global warning_displayed
+
+    object_too_close = False
+
+    # Make a copy of the input image
     img = np.copy(img)
     img_copy = np.copy(img)
     
-    # # Undistort the input image
-    # undistorted_img = np.zeros_like(img)
-    # undistorted_img = cv2.undistort(img, mtx, dist, None, mtx)
-
     # Lane detection
+    # Undistort the input image using calibration parameters
     img = cv2.undistort(img, mtx, dist, None, mtx)
 
+
+    # Apply image preprocessing techniques to detect lanes
     preprocessImage = np.zeros_like(img[:,:,0])
     gradx = abs_sobel_thresh(img, orient='x', thresh=(12,255))
     grady = abs_sobel_thresh(img, orient='x', thresh=(25,255))
     c_binary = color_threshold(img, sthresh=(100,255),vthresh=(50,255))
     preprocessImage[((gradx==1)&(grady==1)|(c_binary==1))] = 255
 
+
+    # Define source and destination points for perspective transformation
     img_size = (img.shape[1], img.shape[0])
     bot_width = .75 #changed from .76
     mid_width = .1 #changed this value - seemed to work a lot better than 0.08 
@@ -144,10 +152,14 @@ def process_image(img):
     offset = img_size[0]*.25
     dst = np.float32([[offset, 0], [img_size[0]-offset, 0],[img_size[0]-offset, img_size[1]],[offset, img_size[1]]])
 
+    # Perform perspective transform on the preprocessed image
     M = cv2.getPerspectiveTransform(src, dst) 
     Minv = cv2.getPerspectiveTransform(dst, src)
     warped = cv2.warpPerspective(preprocessImage, M, img_size,flags=cv2.INTER_LINEAR)
 
+
+    # Lane line detection
+    # Find the lane lines using a sliding window method
     window_width = 25
     window_height = 80
     curve_centers = tracker(Mywindow_width=window_width,Mywindow_height=window_height,Mymargin=25,My_ym=10/720,My_xm=4/384,Mysmooth_factor=15)
@@ -195,7 +207,11 @@ def process_image(img):
     road = np.zeros_like(img)
     road_bkg = np.zeros_like(img)
     cv2.fillPoly(road,[left_lane],color=[255,0,0])
-    cv2.fillPoly(road,[inner_lane],color=[0,255,0])
+    # cv2.fillPoly(road,[inner_lane],color=[0,255,0])
+    if object_too_close:
+        cv2.fillPoly(road, [inner_lane], color=[255, 0, 0])  # Change inner lane color to red
+    else:
+        cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
     cv2.fillPoly(road,[right_lane],color=[0,0,255])
     cv2.fillPoly(road_bkg,[left_lane],color=[255,255,255])
     cv2.fillPoly(road_bkg,[right_lane],color=[255,255,255])
@@ -236,59 +252,111 @@ def process_image(img):
 
 
     # Draw bounding box and label for each object detected
+    # if len(classIds) != 0:
+    #     for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
+    #         # Calculate distance of object from camera (in meters)
+    #         distance = round((2 * focalLength) / box[2], 2)
+    #         cv2.rectangle(img, box, color=(255,0,0), thickness=3)
+    #         object_name = classNames[classId - 1].upper()
+    #         detected_objects.append(f"{object_name}: {distance}m")
+    #         # Crop the detected object image
+    #         x, y, w, h = box
+    #         cropped_img = img_copy[y:y+h, x:x+w]
+    #         detected_object_imgs.append(cropped_img)
+    #         cv2.putText(img, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30),
+    #                     cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+    #         # cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
+    #         #             cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+    #         cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
+    #                     cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+    # if len(classIds) != 0:
+    #     for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
+    #         # Calculate distance of object from camera (in meters)
+    #         distance = round((2 * focalLength) / box[2], 2)
+    #         cv2.rectangle(img, box, color=(255,0,0), thickness=3)
+    #         object_name = classNames[classId - 1].upper()
+    #         detected_objects.append(f"{object_name}: {distance}m")
+    #         # Crop the detected object image
+    #         x, y, w, h = box
+    #         cropped_img = img_copy[y:y+h, x:x+w]
+    #         detected_object_imgs.append(cropped_img)
+            
+    #         # Determine label background size based on box size
+    #         label_size, base_line = cv2.getTextSize(object_name, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    #         label_w = max(label_size[0], w)
+    #         label_h = label_size[1] + 10
+            
+    #         # Draw object name above detection box with background color
+    #         label_ymin = max(y - label_h, 0)
+    #         cv2.rectangle(img, (x, label_ymin), (x + label_w, y), (255, 255, 255), cv2.FILLED)
+    #         cv2.putText(img, object_name, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
+            
+    #         cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
+    #                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     if len(classIds) != 0:
         for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
             # Calculate distance of object from camera (in meters)
             distance = round((2 * focalLength) / box[2], 2)
-            cv2.rectangle(img, box, color=(0, 255, 0), thickness=3)
+            cv2.rectangle(img, box, color=(255,255,255), thickness=3)
             object_name = classNames[classId - 1].upper()
             detected_objects.append(f"{object_name}: {distance}m")
             # Crop the detected object image
             x, y, w, h = box
             cropped_img = img_copy[y:y+h, x:x+w]
             detected_object_imgs.append(cropped_img)
-            cv2.putText(img, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30),
-                        cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+            
+            # Determine label background size based on box size
+            label_size, base_line = cv2.getTextSize(object_name, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+            label_w = max(label_size[0], w)
+            label_h = label_size[1] + 10
+            
+            # Draw object name above detection box with background color
+            label_ymin = max(y - label_h, 0)
+            label_color = (0, 0, 0)  
+            cv2.rectangle(img, (x, label_ymin), (x + label_w, y), label_color, cv2.FILLED)
+            cv2.putText(img, object_name, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
+            
             cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
-                        cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+
+
+
 
 
 # not working---------------------------------------------------------------------------------------------------------------
 
           
-            object_too_close = False
+            # object_too_close = False
 
             # Check if the object is too close
             if distance < object_distance_threshold:
                 object_too_close = True  
 
-            if object_too_close:
-                # Change the inner_lane color to red if an object is too close
-                cv2.fillPoly(road, [inner_lane], color=[0, 0, 255])
+    if object_too_close:
+        # Display warning text when an object is too close
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        warning_text = "WARNING: Object too close!"
+        text_position = (50, 200)
+        font_scale = 0.5
+        font_thickness = 2
 
-                # Display warning text when an object is too close
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                warning_text = "WARNING: Object too close!"
-                text_position = (100, 500)
-                font_scale = 1.5
-                font_thickness = 2
+        warning_color = (0, 0, 255)
 
-                warning_color = (0, 0, 255)
+        # Change the inner_lane color to red if an object is too close
+        cv2.fillPoly(road, [inner_lane], color=[0, 0, 255])
 
-                cv2.putText(result, warning_text, text_position, font, font_scale, warning_color, font_thickness)
-            else:
-                cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
+        cv2.putText(result, warning_text, text_position, font, font_scale, warning_color, font_thickness)
+    else:
+        warning_text = "No objects detected-Keep going!"
+        cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
 
-# not working---------------------------------------------------------------------------------------------------------------
+# color not working---------------------------------------------------------------------------------------------------------------
 
     # Get the width of the image
     img_width = result.shape[1]
-
     
-
     # Draw a filled rectangle as the background
     cv2.rectangle(result, (0, 0), (img_width, 150), bg_color, -1)
-
 
     # Add the text on top of the background
     cv2.putText(result, 'Lane Status', (80, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
@@ -311,18 +379,6 @@ def process_image(img):
     for i, detected_object in enumerate(detected_objects):
         cv2.putText(result, detected_object, (380, 20 + 25 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
-    # Display detected object images at the top
-    # spacing = 20
-    # current_x = 800
-    # for obj_img in detected_object_imgs:
-    #     h, w, _ = obj_img.shape
-    #     scale = 100 / h
-    #     resized_width = int(w * scale)
-    #     resized_obj_img = cv2.resize(obj_img, (resized_width, 100))
-
-    #     result[25:125, current_x:current_x + resized_width] = resized_obj_img
-    #     current_x += resized_width + spacing
-
 
     # Display detected object images at the top
     spacing = 20
@@ -342,14 +398,13 @@ def process_image(img):
         result[25:125, current_x:current_x + resized_width] = resized_obj_img
         current_x += resized_width + spacing
 
-
-
     final_result = cv2.addWeighted(result, 1, img, 0.5, 0)
     return final_result
 
 
 # For video clip or real-time
-cap = cv2.VideoCapture('pv.mp4')
+cap = cv2.VideoCapture('project_video - Copy.mp4')
+
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
 out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720)) # output file name, codec, fps, size of frames
@@ -368,6 +423,7 @@ while True:
     if key == ord('s'):
         break
     
+# warnings.filterwarnings("ignore", category=UserWarning)
 
 # Release video capture and close windows
 cv2.imshow('Result', result)
