@@ -30,7 +30,7 @@ thres = 0.45
 focalLength = 10
 
 # Define the background color
-bg_color = (7, 59, 59)
+bg_color = (117, 117, 117)
 
 #line color
 line_color = (0, 0, 255)
@@ -403,7 +403,7 @@ def process_image(img):
 
 
 # For video clip or real-time
-cap = cv2.VideoCapture('project_video - Copy.mp4')
+cap = cv2.VideoCapture('pv.mp4')
 
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
