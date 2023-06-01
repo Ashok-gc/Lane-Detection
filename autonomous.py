@@ -248,7 +248,7 @@ def process_image(img):
     # Object detection
     classIds, confs, bbox = net.detect(img, confThreshold=thres)
 
-    global objects_detected
+    # global objects_detected
     objects_detected = len(classIds) != 0
      # Initialize a list to store detected objects and their distances
     detected_objects = []

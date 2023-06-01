@@ -248,51 +248,6 @@ def process_image(img):
      # Initialize a list to store detected objects and their distances
     detected_objects = []
     detected_object_imgs = []
-
-
-
-    # Draw bounding box and label for each object detected
-    # if len(classIds) != 0:
-    #     for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
-    #         # Calculate distance of object from camera (in meters)
-    #         distance = round((2 * focalLength) / box[2], 2)
-    #         cv2.rectangle(img, box, color=(255,0,0), thickness=3)
-    #         object_name = classNames[classId - 1].upper()
-    #         detected_objects.append(f"{object_name}: {distance}m")
-    #         # Crop the detected object image
-    #         x, y, w, h = box
-    #         cropped_img = img_copy[y:y+h, x:x+w]
-    #         detected_object_imgs.append(cropped_img)
-    #         cv2.putText(img, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30),
-    #                     cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-    #         # cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
-    #         #             cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-    #         cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
-    #                     cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-    # if len(classIds) != 0:
-    #     for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
-    #         # Calculate distance of object from camera (in meters)
-    #         distance = round((2 * focalLength) / box[2], 2)
-    #         cv2.rectangle(img, box, color=(255,0,0), thickness=3)
-    #         object_name = classNames[classId - 1].upper()
-    #         detected_objects.append(f"{object_name}: {distance}m")
-    #         # Crop the detected object image
-    #         x, y, w, h = box
-    #         cropped_img = img_copy[y:y+h, x:x+w]
-    #         detected_object_imgs.append(cropped_img)
-            
-    #         # Determine label background size based on box size
-    #         label_size, base_line = cv2.getTextSize(object_name, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
-    #         label_w = max(label_size[0], w)
-    #         label_h = label_size[1] + 10
-            
-    #         # Draw object name above detection box with background color
-    #         label_ymin = max(y - label_h, 0)
-    #         cv2.rectangle(img, (x, label_ymin), (x + label_w, y), (255, 255, 255), cv2.FILLED)
-    #         cv2.putText(img, object_name, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
-            
-    #         cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
-    #                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     if len(classIds) != 0:
         for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
             # Calculate distance of object from camera (in meters)
@@ -323,11 +278,6 @@ def process_image(img):
 
 
 
-# not working---------------------------------------------------------------------------------------------------------------
-
-          
-            # object_too_close = False
-
             # Check if the object is too close
             if distance < object_distance_threshold:
                 object_too_close = True  
@@ -350,7 +300,6 @@ def process_image(img):
         warning_text = "No objects detected-Keep going!"
         cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
 
-# color not working---------------------------------------------------------------------------------------------------------------
 
     # Get the width of the image
     img_width = result.shape[1]
@@ -403,7 +352,7 @@ def process_image(img):
 
 
 # For video clip or real-time
-cap = cv2.VideoCapture('pv.mp4')
+cap = cv2.VideoCapture("project_video.mp4")
 
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
@@ -423,7 +372,7 @@ while True:
     if key == ord('s'):
         break
     
-# warnings.filterwarnings("ignore", category=UserWarning)
+
 
 # Release video capture and close windows
 cv2.imshow('Result', result)
